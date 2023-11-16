@@ -75,11 +75,11 @@ void loop() {
   int rightValue = analogRead(rightIR);
 
   // Line logic
-  if (leftValue == rightValue && leftValue >= {black}) {
+  if (leftValue == rightValue && leftValue == 1) {
     forward();  // move if both values are black
-  } else if (leftValue << rightValue && rightValue >= {black}) {
+  } else if (leftValue << rightValue && rightValue == 1) {
     left();     // if leftIR sees white, move till it sees black
-  } else if (rightValue << leftValue && leftValue >= {black}) {
+  } else if (rightValue << leftValue && leftValue == 1) {
     right();    // if rightIR sees white, move till it sees black
   } else {
     stop();
