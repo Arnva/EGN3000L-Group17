@@ -1,87 +1,141 @@
+#include <LiquidCrystal_I2C.h> // Include the LiquidCrystal_I2C library for LCD
 
-const int rightIR = A0;    // pin for the right IR sensor
-const int leftIR = A1;   // pin for the left IR sensor
+// Create an LCD object with its address (0x27) and dimensions (16x2)
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-#define leftSpeed 3     // left motor speed control
+// Define variables for different states and messages
+char array1[] = "Robot State:    ";
+char array2[] = "STOPPED         ";
+char array3[] = "BACKWARD        ";
+char array4[] = "FORWARD         ";
+char array5[] = "OUT OF RANGE    ";
 
-#define rightSpeed 6   // right motor speed control
+// Define pins for ultrasonic sensor, motor driver, and LED
+int echoPin = 8; 
+int trigPin = 7;
+int in1 = 4;
+int in2 = 5;
+int in3 = 9;
+int in4 = 10;
+int ledpin = 13;
 
-//RIGHT MOTOR
-#define IN1 4 // connect IN1 on the H-Bridge to Arduino pin 4
-#define IN2 5 // connect IN2 on the H-Bridge to Arduino pin 5
+// Variables to track the previous and current LCD states
+int LCDprev = 99;
+int LCDcurr = 100;
 
-//LEFT MOTOR
-#define IN3 9 // connect IN3 on the H-Bridge to Arduino pin 9
-#define IN4 10 // connect IN4 on the H-Bridge to Arduino pin 10
+// Variables for ultrasonic sensor measurements
+long duration;
+int distance;
 
 void setup() {
-  // Motor control is output
-    pinMode(rightSpeed, OUTPUT);
-    pinMode(IN1, OUTPUT);
-    pinMode(IN2, OUTPUT);
+  // Initialize and turn on the LCD backlight
+  lcd.init();
+  lcd.backlight();
 
-    pinMode(leftSpeed, OUTPUT);
-    pinMode(IN3, OUTPUT);
-    pinMode(IN4, OUTPUT);
+  // Set pin modes for ultrasonic sensor, motor driver, and LED
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(in1, OUTPUT);
+  pinMode(in2, OUTPUT);
+  pinMode(in3, OUTPUT);
+  pinMode(in4, OUTPUT);
+  pinMode(ledpin, OUTPUT);
 
-  // IR is input
-  pinMode(leftIR, INPUT);
-  pinMode(rightIR, INPUT);
-}
+  // Configure serial communication for debugging
+  Serial.begin(9600);
 
-//set speed 150 of left & right if line on both sides
-void forward() {
-  analogWrite(rightSpeed, 150);
-    digitalWrite(IN1, HIGH);
-    digitalWrite(IN2, LOW);
+  // Set the cursor to the top left corner of the LCD
+  lcd.setCursor(0, 0);
 
-  analogWrite(leftSpeed, 150);
-    digitalWrite(IN3, HIGH);
-    digitalWrite(IN4, LOW);
-}
-
-
-//set speed 0 of right if no line on left
-void right() {
-  analogWrite(rightSpeed, 0);
-    digitalWrite(IN1, HIGH);
-    digitalWrite(IN2, LOW);
-
-  analogWrite(leftSpeed, 100);
-    digitalWrite(IN3, HIGH);
-    digitalWrite(IN4, LOW);
-}
-
-//set speed 0 of left if no line on right
-void left() {
-  analogWrite(rightSpeed, 100);
-    digitalWrite(IN1, HIGH);
-    digitalWrite(IN2, LOW);
-
-  analogWrite(leftSpeed, 0);
-    digitalWrite(IN3, HIGH);
-    digitalWrite(IN4, LOW);
-}
-
-//set speed 0 if no line
-void stop() {
-  analogWrite(rightSpeed, 0);
-  analogWrite(leftSpeed, 0);
+  // Print the initial message on the LCD
+  lcd.print(array1);
 }
 
 void loop() {
-  // Read sensor values
-  int leftValue = analogRead(leftIR);
-  int rightValue = analogRead(rightIR);
+  // Update the LCD state only when there is a change in state
+  LCDprev = LCDcurr;
 
-  // Line logic
-  if (leftValue == rightValue && leftValue == 1) {
-    forward();  // move if both values are black
-  } else if (leftValue << rightValue && rightValue == 1) {
-    left();     // if leftIR sees white, move till it sees black
-  } else if (rightValue << leftValue && leftValue == 1) {
-    right();    // if rightIR sees white, move till it sees black
+  // Send a pulse to the ultrasonic sensor to measure distance
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+  distance = duration * 0.034 / 2;
+
+  // Display the distance on the serial monitor
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.println(" cm");
+
+  // Determine the robot state based on the distance and update the LCD
+  if (distance <= 15) {
+    LCDcurr = 1;
+
+    // Control the motor and LED for backward movement
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, HIGH);
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, HIGH);
+    digitalWrite(ledpin, HIGH);
+
+    // Update the LCD only if there is a change in state
+    if (LCDprev != LCDcurr) {
+      lcd.setCursor(0, 1);
+      lcd.print(array3);
+      delay(10);
+    }
+  } else if (distance <= 30) {
+    LCDcurr = 2;
+
+    // Stop the motor and turn off the LED
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, LOW);
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, LOW);
+    digitalWrite(ledpin, LOW);
+
+    // Update the LCD only if there is a change in state
+    if (LCDprev != LCDcurr) {
+      lcd.setCursor(0, 1);
+      lcd.print(array2);
+      delay(10);
+    }
+  } else if (distance <= 45) {
+    LCDcurr = 3;
+
+    // Control the motor and LED for forward movement
+    digitalWrite(in1, HIGH);
+    digitalWrite(in2, LOW);
+    digitalWrite(in3, HIGH);
+    digitalWrite(in4, LOW);
+    digitalWrite(ledpin, HIGH);
+
+    // Update the LCD only if there is a change in state
+    if (LCDprev != LCDcurr) {
+      lcd.setCursor(0, 1);
+      lcd.print(array4);
+      delay(10);
+    }
   } else {
-    stop();
+    LCDcurr = 4;
+
+    // Stop the motor and turn off the LED
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, LOW);
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, LOW);
+    digitalWrite(ledpin, LOW);
+
+    // Update the LCD only if there is a change in state
+    if (LCDprev != LCDcurr) {
+      lcd.setCursor(0, 1);
+      lcd.print(array5);
+      delay(10);
+    }
   }
+
+  // Add a small delay to stabilize the measurements
+  delay(10);
 }
