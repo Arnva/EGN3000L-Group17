@@ -8,7 +8,15 @@ char array1[] = "Robot State:    ";
 char array2[] = "STOPPED         ";
 char array3[] = "BACKWARD        ";
 char array4[] = "FORWARD         ";
+char array6[] = "LEFT            ";
+char array7[] = "RIGHT           ";
 char array5[] = "OUT OF RANGE    ";
+
+#define leftSpeed 3    
+// left motor speed control
+
+#define rightSpeed 6   
+// right motor speed control
 
 // Define pins for ultrasonic sensor, motor driver, and LED
 int echoPin = 8; 
@@ -51,6 +59,59 @@ void setup() {
   lcd.print(array1);
 }
 
+void left() {
+  analogWrite(rightSpeed, 100);
+    digitalWrite(in1, HIGH);
+    digitalWrite(in2, LOW);
+
+  analogWrite(leftSpeed, 0);
+    digitalWrite(in3, HIGH);
+    digitalWrite(in4, LOW);
+}
+
+//set speed 0 of right if no line on left
+void right() {
+  analogWrite(rightSpeed, 0);
+    digitalWrite(in1, HIGH);
+    digitalWrite(in2, LOW);
+
+  analogWrite(leftSpeed, 100);
+    digitalWrite(in3, HIGH);
+    digitalWrite(in4, LOW);
+}
+
+
+void stop() {
+  analogWrite(rightSpeed, 0);
+  analogWrite(leftSpeed, 0);
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, LOW);
+  ;
+}
+
+void forward() {
+  analogWrite(rightSpeed, 150);
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+
+  analogWrite(leftSpeed, 150);
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
+}
+void backward() {
+  analogWrite(rightSpeed, 150);
+  digitalWrite(in1, HIGH);
+  digitalWrite(IN2, LOW);
+
+  analogWrite(leftSpeed, 150);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+}
+
+
+
 void loop() {
   // Update the LCD state only when there is a change in state
   LCDprev = LCDcurr;
@@ -74,10 +135,6 @@ void loop() {
     LCDcurr = 1;
 
     // Control the motor and LED for backward movement
-    digitalWrite(in1, LOW);
-    digitalWrite(in2, HIGH);
-    digitalWrite(in3, LOW);
-    digitalWrite(in4, HIGH);
     digitalWrite(ledpin, HIGH);
 
     // Update the LCD only if there is a change in state
@@ -90,11 +147,8 @@ void loop() {
     LCDcurr = 2;
 
     // Stop the motor and turn off the LED
-    digitalWrite(in1, LOW);
-    digitalWrite(in2, LOW);
-    digitalWrite(in3, LOW);
-    digitalWrite(in4, LOW);
-    digitalWrite(ledpin, LOW);
+    stop();
+    digitalWrite(ledpin, LOW)
 
     // Update the LCD only if there is a change in state
     if (LCDprev != LCDcurr) {
@@ -106,10 +160,7 @@ void loop() {
     LCDcurr = 3;
 
     // Control the motor and LED for forward movement
-    digitalWrite(in1, HIGH);
-    digitalWrite(in2, LOW);
-    digitalWrite(in3, HIGH);
-    digitalWrite(in4, LOW);
+    forward()
     digitalWrite(ledpin, HIGH);
 
     // Update the LCD only if there is a change in state
