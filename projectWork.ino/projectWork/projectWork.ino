@@ -103,11 +103,11 @@ void forward() {
 void backward() {
   analogWrite(rightSpeed, 150);
   digitalWrite(in1, HIGH);
-  digitalWrite(IN2, LOW);
+  digitalWrite(in2, LOW);
 
   analogWrite(leftSpeed, 150);
-  digitalWrite(IN3, HIGH);
-  digitalWrite(IN4, LOW);
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
 }
 
 
@@ -135,6 +135,7 @@ void loop() {
     LCDcurr = 1;
 
     // Control the motor and LED for backward movement
+    backward();
     digitalWrite(ledpin, HIGH);
 
     // Update the LCD only if there is a change in state
